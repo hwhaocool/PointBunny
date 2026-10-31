@@ -1,0 +1,21 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin
+.kotlin/
+
+# Android Studio / IDE
+.idea/
+*.iml
+local.properties
+captures/
+.DS_Store
+
+# 构建产物
+*.apk
+*.aab
+
+# 日志
+*.log
