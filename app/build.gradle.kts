@@ -13,8 +13,8 @@ android {
         applicationId = "com.candy.pointbunny"
         minSdk = 26          // 最低支持 Android 8.0，可直接使用 java.time API
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     buildTypes {

@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,11 +58,12 @@ private fun dayLabel(d: LocalDate, today: LocalDate): String {
 }
 
 /**
- * 积分历史页：顶部本月攒/花汇总 + 按日期分组记录 + 删除（带确认）
+ * 积分历史页：顶部本月攒/花汇总 + 按日期分组记录 + 编辑 / 删除（删除带确认）
  */
 @Composable
 fun HistoryScreen(
     records: List<RecordEntity>,
+    onEdit: (RecordEntity) -> Unit,
     onDelete: (RecordEntity) -> Unit
 ) {
     var pendingDelete by remember { mutableStateOf<RecordEntity?>(null) }
@@ -134,7 +136,11 @@ fun HistoryScreen(
                         )
                         lastLabel = label
                     }
-                    RecordRow(r, onClick = { pendingDelete = r })
+                    RecordRow(
+                        r,
+                        onEdit = { onEdit(r) },
+                        onDelete = { pendingDelete = r }
+                    )
                     Spacer(Modifier.height(8.dp))
                 }
             }
@@ -173,9 +179,12 @@ private fun SummaryCell(label: String, value: String, color: androidx.compose.ui
 }
 
 @Composable
-private fun RecordRow(r: RecordEntity, onClick: () -> Unit) {
+private fun RecordRow(
+    r: RecordEntity,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
     Surface(
-        onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         color = White,
         shadowElevation = 1.dp,
@@ -206,7 +215,7 @@ private fun RecordRow(r: RecordEntity, onClick: () -> Unit) {
                 Text(
                     r.time.let {
                         java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault())
-                            .format(DateTimeFormatter.ofPattern("HH:mm"))
+                            .format(DateTimeFormatter.ofPattern("yyyy年M月d日 HH:mm:ss"))
                     },
                     fontSize = 12.sp,
                     color = TextBrownLight
@@ -218,8 +227,13 @@ private fun RecordRow(r: RecordEntity, onClick: () -> Unit) {
                 fontWeight = FontWeight.ExtraBold,
                 color = if (r.isEarn) MintGreen else WarmOrange
             )
-            Spacer(Modifier.size(10.dp))
-            Text("🗑️", fontSize = 16.sp)
+            Spacer(Modifier.size(6.dp))
+            IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
+                Text("✏️", fontSize = 16.sp)
+            }
+            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                Text("🗑️", fontSize = 16.sp)
+            }
         }
     }
 }

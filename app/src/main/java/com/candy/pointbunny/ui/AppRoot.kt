@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.candy.pointbunny.data.RecordEntity
 import com.candy.pointbunny.ui.screens.AddRecordSheet
 import com.candy.pointbunny.ui.screens.BadgeScreen
 import com.candy.pointbunny.ui.screens.HomeScreen
@@ -64,6 +65,7 @@ fun AppRoot(vm: BunnyViewModel = viewModel()) {
 
     var current by rememberSaveable { mutableStateOf("home") }
     var showAddSheet by remember { mutableStateOf<String?>(null) }
+    var editRecord by remember { mutableStateOf<RecordEntity?>(null) }
 
     // 导出 JSON 只在数据变化时重建
     val exportJson = remember(records, wishes, balance) { vm.buildExportJson() }
@@ -116,6 +118,7 @@ fun AppRoot(vm: BunnyViewModel = viewModel()) {
                 when (route) {
                     "history" -> HistoryScreen(
                         records = records,
+                        onEdit = { editRecord = it },
                         onDelete = vm::deleteRecord
                     )
                     "stats" -> StatsScreen(records = records)
@@ -159,6 +162,21 @@ fun AppRoot(vm: BunnyViewModel = viewModel()) {
                         showAddSheet = null
                     },
                     onWarn = vm::showToast
+                )
+            }
+
+            // ---- 编辑记录底部弹窗（顶层） ----
+            editRecord?.let { record ->
+                AddRecordSheet(
+                    type = record.type,
+                    balance = balance,
+                    onDismiss = { editRecord = null },
+                    onSave = { points, reason, emoji ->
+                        vm.updateRecord(record, points, reason, emoji)
+                        editRecord = null
+                    },
+                    onWarn = vm::showToast,
+                    editTarget = record
                 )
             }
         }

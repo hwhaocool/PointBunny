@@ -99,6 +99,16 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** 编辑一条历史记录（积分/原因/emoji 可改，余额自动重算） */
+    fun updateRecord(record: RecordEntity, points: Int, reason: String, emoji: String) {
+        viewModelScope.launch {
+            recordDao.update(
+                record.copy(points = points, reason = reason, emoji = emoji)
+            )
+            _toast.value = "✅ 已更新这条记录"
+        }
+    }
+
     // ---------- 心愿操作 ----------
 
     fun addWish(emoji: String, name: String, target: Int) {

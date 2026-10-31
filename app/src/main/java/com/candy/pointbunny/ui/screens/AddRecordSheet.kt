@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.candy.pointbunny.data.RecordEntity
 import com.candy.pointbunny.ui.comp.NumberKeyboard
 import com.candy.pointbunny.ui.theme.CandyPink
 import com.candy.pointbunny.ui.theme.CandyPinkPale
@@ -81,15 +82,32 @@ fun AddRecordSheet(
     balance: Int,
     onDismiss: () -> Unit,
     onSave: (points: Int, reason: String, emoji: String) -> Unit,
-    onWarn: (String) -> Unit           // 余额不足等警告回调（显示 toast）
+    onWarn: (String) -> Unit,          // 余额不足等警告回调（显示 toast）
+    editTarget: RecordEntity? = null   // 非空 = 编辑模式
 ) {
     val isEarn = type == "earn"
     val reasons = if (isEarn) EARN_REASONS else SPEND_REASONS
     val themeColor = if (isEarn) MintGreen else WarmOrange
+    val isEdit = editTarget != null
+    // 编辑花分记录时，先还原本条已扣的积分，避免误判余额不足
+    val spendLimit = if (!isEarn) balance + (editTarget?.points ?: 0) else balance
 
-    var input by remember { mutableStateOf("") }
-    var reasonIndex by remember { mutableIntStateOf(0) }
-    var customReason by remember { mutableStateOf("") }
+    var input by remember(editTarget) { mutableStateOf(editTarget?.points?.toString() ?: "") }
+    var reasonIndex by remember(editTarget) {
+        mutableIntStateOf(
+            editTarget?.let { t ->
+                val idx = reasons.indexOfFirst { it.second == t.reason }
+                if (idx >= 0) idx else reasons.indexOfFirst { it.first == "✏️" }.coerceAtLeast(0)
+            } ?: 0
+        )
+    }
+    var customReason by remember(editTarget) {
+        mutableStateOf(
+            editTarget?.let { t ->
+                if (reasons.any { it.second == t.reason }) "" else t.reason
+            } ?: ""
+        )
+    }
     val shake = remember { Animatable(0f) }
     var shakeKey by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
@@ -120,7 +138,7 @@ fun AddRecordSheet(
         ) {
             // ---- 标题 ----
             Text(
-                if (isEarn) "🐰 攒积分啦！" else "🛍️ 要花积分吗？",
+                if (isEdit) "✏️ 修改记录" else if (isEarn) "🐰 攒积分啦！" else "🛍️ 要花积分吗？",
                 fontSize = 21.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextBrown,
@@ -271,7 +289,7 @@ fun AddRecordSheet(
                         onWarn("先选一个数字哦～")
                         return@Surface
                     }
-                    if (!isEarn && points > balance) {
+                    if (!isEarn && points > spendLimit) {
                         // 余额不足：抖动 + 提示，不关闭
                         shakeKey++
                         onWarn("积分不够啦，先和爸爸妈妈一起攒一攒吧😢")
@@ -292,7 +310,7 @@ fun AddRecordSheet(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
-                        "保存 ✓",
+                        if (isEdit) "保存修改 ✓" else "保存 ✓",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = White
