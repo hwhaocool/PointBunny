@@ -1,4 +1,4 @@
-package com.candy.pointbunny.ui.screens
+package com.github.hwhaocool.pointbunny.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -38,13 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Settings
-import com.candy.pointbunny.ui.theme.CandyPink
-import com.candy.pointbunny.ui.theme.CandyPinkLight
-import com.candy.pointbunny.ui.theme.MintGreen
-import com.candy.pointbunny.ui.theme.TextBrown
-import com.candy.pointbunny.ui.theme.TextBrownLight
-import com.candy.pointbunny.ui.theme.WarmOrange
-import com.candy.pointbunny.ui.theme.White
+import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
+import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkLight
+import com.github.hwhaocool.pointbunny.ui.theme.MintGreen
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrown
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrownLight
+import com.github.hwhaocool.pointbunny.ui.theme.WarmOrange
+import com.github.hwhaocool.pointbunny.ui.theme.White
 
 /**
  * 首页：小兔子 + 积分宝藏 + 两大按钮 + 四个快捷入口

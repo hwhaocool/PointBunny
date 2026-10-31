@@ -1,4 +1,4 @@
-package com.candy.pointbunny.ui.screens
+package com.github.hwhaocool.pointbunny.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -33,15 +33,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.candy.pointbunny.data.RecordEntity
-import com.candy.pointbunny.logic.StatsLogic
-import com.candy.pointbunny.ui.theme.CandyPinkPale
-import com.candy.pointbunny.ui.theme.DangerRed
-import com.candy.pointbunny.ui.theme.MintGreen
-import com.candy.pointbunny.ui.theme.TextBrown
-import com.candy.pointbunny.ui.theme.TextBrownLight
-import com.candy.pointbunny.ui.theme.WarmOrange
-import com.candy.pointbunny.ui.theme.White
+import com.github.hwhaocool.pointbunny.data.RecordEntity
+import com.github.hwhaocool.pointbunny.logic.StatsLogic
+import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkPale
+import com.github.hwhaocool.pointbunny.ui.theme.DangerRed
+import com.github.hwhaocool.pointbunny.ui.theme.MintGreen
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrown
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrownLight
+import com.github.hwhaocool.pointbunny.ui.theme.WarmOrange
+import com.github.hwhaocool.pointbunny.ui.theme.White
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 

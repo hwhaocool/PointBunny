@@ -1,3 +1,7 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -6,15 +10,20 @@ plugins {
 }
 
 android {
-    namespace = "com.candy.pointbunny"
+    namespace = "com.github.hwhaocool.pointbunny"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.candy.pointbunny"
+        applicationId = "com.github.hwhaocool.pointbunny"
         minSdk = 26          // 最低支持 Android 8.0，可直接使用 java.time API
         targetSdk = 34
         versionCode = 2
         versionName = "1.1"
+
+        // 「关于」页展示的构建时间（可用 -PbuildTime=... 覆盖，便于复现构建）
+        val buildTime = (project.findProperty("buildTime") as String?)
+            ?: SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date())
+        buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
     }
 
     buildTypes {
@@ -35,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

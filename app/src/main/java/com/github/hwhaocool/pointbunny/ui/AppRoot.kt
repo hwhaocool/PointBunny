@@ -1,4 +1,4 @@
-package com.candy.pointbunny.ui
+package com.github.hwhaocool.pointbunny.ui
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
@@ -30,21 +30,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.candy.pointbunny.data.RecordEntity
-import com.candy.pointbunny.ui.screens.AddRecordSheet
-import com.candy.pointbunny.ui.screens.BadgeScreen
-import com.candy.pointbunny.ui.screens.HomeScreen
-import com.candy.pointbunny.ui.screens.HistoryScreen
-import com.candy.pointbunny.ui.screens.ParentZoneScreen
-import com.candy.pointbunny.ui.screens.StatsScreen
-import com.candy.pointbunny.ui.screens.WishScreen
-import com.candy.pointbunny.ui.theme.CandyPink
-import com.candy.pointbunny.ui.theme.CandyPinkLight
-import com.candy.pointbunny.ui.theme.Cream
-import com.candy.pointbunny.ui.theme.TextBrown
-import com.candy.pointbunny.ui.theme.TextBrownLight
-import com.candy.pointbunny.ui.theme.White
-import com.candy.pointbunny.vm.BunnyViewModel
+import com.github.hwhaocool.pointbunny.data.RecordEntity
+import com.github.hwhaocool.pointbunny.ui.screens.AboutScreen
+import com.github.hwhaocool.pointbunny.ui.screens.AddRecordSheet
+import com.github.hwhaocool.pointbunny.ui.screens.BadgeScreen
+import com.github.hwhaocool.pointbunny.ui.screens.DataShareScreen
+import com.github.hwhaocool.pointbunny.ui.screens.HomeScreen
+import com.github.hwhaocool.pointbunny.ui.screens.HistoryScreen
+import com.github.hwhaocool.pointbunny.ui.screens.ParentZoneScreen
+import com.github.hwhaocool.pointbunny.ui.screens.StatsScreen
+import com.github.hwhaocool.pointbunny.ui.screens.WishScreen
+import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
+import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkLight
+import com.github.hwhaocool.pointbunny.ui.theme.Cream
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrown
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrownLight
+import com.github.hwhaocool.pointbunny.ui.theme.White
+import com.github.hwhaocool.pointbunny.vm.BunnyViewModel
 
 /**
  * 应用骨架：
@@ -134,8 +136,16 @@ fun AppRoot(vm: BunnyViewModel = viewModel()) {
                         balance = balance,
                         recordCount = records.size,
                         wishCount = wishes.size,
-                        json = exportJson,
+                        onDataShare = { current = "datashare" },
+                        onAbout = { current = "about" },
                         onClearAll = vm::clearAllData
+                    )
+                    "datashare" -> DataShareScreen(
+                        json = exportJson,
+                        onBack = { current = "parent" }
+                    )
+                    "about" -> AboutScreen(
+                        onBack = { current = "parent" }
                     )
                     else -> HomeScreen(
                         balance = balance,

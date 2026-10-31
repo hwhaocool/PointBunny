@@ -1,4 +1,4 @@
-package com.candy.pointbunny.ui.theme
+package com.github.hwhaocool.pointbunny.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

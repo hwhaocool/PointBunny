@@ -1,14 +1,14 @@
-package com.candy.pointbunny.vm
+package com.github.hwhaocool.pointbunny.vm
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.candy.pointbunny.data.AppDatabase
-import com.candy.pointbunny.data.BadgeEntity
-import com.candy.pointbunny.data.RecordEntity
-import com.candy.pointbunny.data.WishEntity
-import com.candy.pointbunny.logic.BadgeDefs
-import com.candy.pointbunny.logic.BadgeLogic
+import com.github.hwhaocool.pointbunny.data.AppDatabase
+import com.github.hwhaocool.pointbunny.data.BadgeEntity
+import com.github.hwhaocool.pointbunny.data.RecordEntity
+import com.github.hwhaocool.pointbunny.data.WishEntity
+import com.github.hwhaocool.pointbunny.logic.BadgeDefs
+import com.github.hwhaocool.pointbunny.logic.BadgeLogic
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

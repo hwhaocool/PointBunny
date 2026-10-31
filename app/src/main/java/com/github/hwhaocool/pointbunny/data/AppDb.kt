@@ -1,4 +1,4 @@
-package com.candy.pointbunny.data
+package com.github.hwhaocool.pointbunny.data
 
 import android.content.Context
 import androidx.room.Dao

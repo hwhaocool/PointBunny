@@ -1,4 +1,4 @@
-package com.candy.pointbunny.ui.screens
+package com.github.hwhaocool.pointbunny.ui.screens
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -36,16 +36,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.candy.pointbunny.data.RecordEntity
-import com.candy.pointbunny.ui.comp.NumberKeyboard
-import com.candy.pointbunny.ui.theme.CandyPink
-import com.candy.pointbunny.ui.theme.CandyPinkPale
-import com.candy.pointbunny.ui.theme.Cream
-import com.candy.pointbunny.ui.theme.MintGreen
-import com.candy.pointbunny.ui.theme.TextBrown
-import com.candy.pointbunny.ui.theme.TextBrownLight
-import com.candy.pointbunny.ui.theme.WarmOrange
-import com.candy.pointbunny.ui.theme.White
+import com.github.hwhaocool.pointbunny.data.RecordEntity
+import com.github.hwhaocool.pointbunny.ui.comp.NumberKeyboard
+import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
+import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkPale
+import com.github.hwhaocool.pointbunny.ui.theme.Cream
+import com.github.hwhaocool.pointbunny.ui.theme.MintGreen
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrown
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrownLight
+import com.github.hwhaocool.pointbunny.ui.theme.WarmOrange
+import com.github.hwhaocool.pointbunny.ui.theme.White
 
 /** 攒分原因（与原型一致，💃 跳舞为新增，✏️ 可自定义） */
 val EARN_REASONS = listOf(

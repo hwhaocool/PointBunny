@@ -1,4 +1,4 @@
-package com.candy.pointbunny.ui.comp
+package com.github.hwhaocool.pointbunny.ui.comp
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,8 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.candy.pointbunny.ui.theme.SunnyYellow
-import com.candy.pointbunny.ui.theme.TextBrown
+import com.github.hwhaocool.pointbunny.ui.theme.SunnyYellow
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrown
 
 /**
  * 给 3-6 岁小朋友用的超大数字键盘：

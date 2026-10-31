@@ -1,4 +1,4 @@
-package com.candy.pointbunny.ui.comp
+package com.github.hwhaocool.pointbunny.ui.comp
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
@@ -25,11 +25,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.candy.pointbunny.logic.StatBucket
-import com.candy.pointbunny.ui.theme.MintGreen
-import com.candy.pointbunny.ui.theme.TextBrown
-import com.candy.pointbunny.ui.theme.TextBrownLight
-import com.candy.pointbunny.ui.theme.WarmOrange
+import com.github.hwhaocool.pointbunny.logic.StatBucket
+import com.github.hwhaocool.pointbunny.ui.theme.MintGreen
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrown
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrownLight
+import com.github.hwhaocool.pointbunny.ui.theme.WarmOrange
 
 /**
  * 攒分 vs 花分 对比柱状图（Canvas 自绘，与原型一致）：

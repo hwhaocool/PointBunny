@@ -1,4 +1,4 @@
-package com.candy.pointbunny.ui.screens
+package com.github.hwhaocool.pointbunny.ui.screens
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -37,13 +37,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.candy.pointbunny.data.WishEntity
-import com.candy.pointbunny.ui.theme.CandyPink
-import com.candy.pointbunny.ui.theme.CandyPinkPale
-import com.candy.pointbunny.ui.theme.MintGreen
-import com.candy.pointbunny.ui.theme.TextBrown
-import com.candy.pointbunny.ui.theme.TextBrownLight
-import com.candy.pointbunny.ui.theme.White
+import com.github.hwhaocool.pointbunny.data.WishEntity
+import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
+import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkPale
+import com.github.hwhaocool.pointbunny.ui.theme.MintGreen
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrown
+import com.github.hwhaocool.pointbunny.ui.theme.TextBrownLight
+import com.github.hwhaocool.pointbunny.ui.theme.White
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter

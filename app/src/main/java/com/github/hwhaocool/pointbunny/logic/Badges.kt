@@ -1,6 +1,6 @@
-package com.candy.pointbunny.logic
+package com.github.hwhaocool.pointbunny.logic
 
-import com.candy.pointbunny.data.RecordEntity
+import com.github.hwhaocool.pointbunny.data.RecordEntity
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
