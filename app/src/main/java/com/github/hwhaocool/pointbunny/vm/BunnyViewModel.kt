@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -199,6 +200,78 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
             wishDao.deleteAll()
             badgeDao.deleteAll()
             _toast.value = "数据已全部清空"
+        }
+    }
+
+    /**
+     * 导入 JSON（增量合并）：解析记录 + 心愿，追加到现有数据，不覆盖已有内容；
+     * 导入后根据全部数据重算并补发未解锁的勋章。与 buildExportJson 的格式一一对应。
+     */
+    fun importData(jsonText: String) {
+        viewModelScope.launch {
+            try {
+                val obj = JSONObject(jsonText)
+                val recordsArr = obj.optJSONArray("records") ?: JSONArray()
+                val wishesArr = obj.optJSONArray("wishes") ?: JSONArray()
+
+                val importedRecords = mutableListOf<RecordEntity>()
+                for (i in 0 until recordsArr.length()) {
+                    val r = recordsArr.getJSONObject(i)
+                    val type = r.optString("type", "earn")
+                        .let { if (it == "spend") "spend" else "earn" }
+                    val time = runCatching {
+                        OffsetDateTime.parse(r.optString("time", ""))
+                            .toInstant().toEpochMilli()
+                    }.getOrDefault(System.currentTimeMillis())
+                    importedRecords += RecordEntity(
+                        time = time,
+                        points = r.optInt("points", 0).coerceAtLeast(0),
+                        reason = r.optString("reason", ""),
+                        emoji = r.optString("emoji", "⭐"),
+                        type = type
+                    )
+                }
+
+                val importedWishes = mutableListOf<WishEntity>()
+                for (i in 0 until wishesArr.length()) {
+                    val w = wishesArr.getJSONObject(i)
+                    val done = w.optBoolean("redeemed", false)
+                    importedWishes += WishEntity(
+                        emoji = w.optString("emoji", "🎁"),
+                        name = w.optString("name", ""),
+                        target = w.optInt("target", 0).coerceAtLeast(0),
+                        done = done,
+                        doneAt = if (done) System.currentTimeMillis() else null
+                    )
+                }
+
+                // 增量合并：追加导入，不清空已有数据
+                recordDao.insertAll(importedRecords)
+                wishDao.insertAll(importedWishes)
+
+                // 根据全部数据重算勋章，只补发未解锁的
+                val allRecords = recordDao.allOnce()
+                val allWishes = wishDao.allOnce()
+                val existingKeys = badgeDao.allKeys().toSet()
+                val now = System.currentTimeMillis()
+                val toUnlock = mutableListOf<BadgeEntity>()
+                fun unlock(key: String) {
+                    if (key !in existingKeys && toUnlock.none { it.key == key }) {
+                        toUnlock += BadgeEntity(key, now)
+                    }
+                }
+                if (allRecords.any { it.isEarn }) unlock("b1")
+                if (BadgeLogic.balanceOf(allRecords) >= 100) unlock("b2")
+                if (allRecords.any { !it.isEarn }) unlock("b3")
+                if (BadgeLogic.earnStreak(allRecords) >= 7) unlock("b4")
+                if (BadgeLogic.totalEarn(allRecords) >= 2000) unlock("b5")
+                if (allWishes.any { it.done }) unlock("b6")
+                if (toUnlock.isNotEmpty()) badgeDao.insertAll(toUnlock)
+
+                _toast.value = "✅ 导入成功：新增 ${importedRecords.size} 条记录、${importedWishes.size} 个心愿"
+            } catch (e: Exception) {
+                _toast.value = "导入失败：JSON 格式不对哦"
+            }
         }
     }
 }

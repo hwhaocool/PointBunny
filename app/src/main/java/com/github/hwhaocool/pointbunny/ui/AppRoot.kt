@@ -142,7 +142,9 @@ fun AppRoot(vm: BunnyViewModel = viewModel()) {
                     )
                     "datashare" -> DataShareScreen(
                         json = exportJson,
-                        onBack = { current = "parent" }
+                        onBack = { current = "parent" },
+                        onImport = vm::importData,
+                        onWarn = vm::showToast
                     )
                     "about" -> AboutScreen(
                         onBack = { current = "parent" }

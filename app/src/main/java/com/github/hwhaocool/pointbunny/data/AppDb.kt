@@ -23,6 +23,9 @@ interface RecordDao {
     @Insert
     suspend fun insert(r: RecordEntity): Long
 
+    @Insert
+    suspend fun insertAll(records: List<RecordEntity>)
+
     @Update
     suspend fun update(r: RecordEntity)
 
@@ -45,8 +48,14 @@ interface WishDao {
     @Query("SELECT * FROM wishes ORDER BY done ASC, id DESC")
     fun flowAll(): Flow<List<WishEntity>>
 
+    @Query("SELECT * FROM wishes")
+    suspend fun allOnce(): List<WishEntity>
+
     @Insert
     suspend fun insert(w: WishEntity): Long
+
+    @Insert
+    suspend fun insertAll(wishes: List<WishEntity>)
 
     @Update
     suspend fun update(w: WishEntity)
@@ -66,6 +75,9 @@ interface BadgeDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(b: BadgeEntity)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(badges: List<BadgeEntity>)
 
     @Query("DELETE FROM badges")
     suspend fun deleteAll()
