@@ -9,6 +9,10 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+// 版本号默认值；CI 可通过 -PversionName=... / -PversionCode=... 覆盖
+val appVersionName = (project.findProperty("versionName") as String?) ?: "1.1"
+val appVersionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 2
+
 android {
     namespace = "com.github.hwhaocool.pointbunny"
     compileSdk = 34
@@ -17,8 +21,8 @@ android {
         applicationId = "com.github.hwhaocool.pointbunny"
         minSdk = 26          // 最低支持 Android 8.0，可直接使用 java.time API
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         // 「关于」页展示的构建时间（可用 -PbuildTime=... 覆盖，便于复现构建）
         val buildTime = (project.findProperty("buildTime") as String?)

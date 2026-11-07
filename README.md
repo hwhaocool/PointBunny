@@ -82,6 +82,22 @@ APK 输出在 `app/build/outputs/apk/debug/`，产物命名为 `PointBunny-<版�
 
 > 首次构建需要下载依赖，请确保网络可访问 google() / mavenCentral()（项目已配置阿里云镜像优先）。
 
+### 打 Tag 自动构建 APK（GitHub Actions）
+
+推送形如 `v1.0.0` 的 tag 会自动触发 `.github/workflows/build-apk-on-tag.yml`：
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+- tag 去掉前缀 `v` 即为 `versionName`（`v1.0.0` → `1.0.0`）
+- `versionCode` 自动计算为 `major * 10000 + minor * 100 + patch`（`1.0.0` → `10000`）
+- 构建 debug APK（debug 签名，可直接安装），上传为 Actions artifact，并附加到同名 GitHub Release
+- 产物文件名为 `PointBunny-<versionName>.apk`，例如 `PointBunny-1.0.0.apk`
+
+> 未配置正式签名，因此自动发布的是 debug 签名 APK；如需上架应用商店，请自行配置 release 签名。
+
 ## 🗄️ 数据说明
 
 - 所有数据保存在 Room 数据库（`point_bunny.db`），**不上传任何服务器**
