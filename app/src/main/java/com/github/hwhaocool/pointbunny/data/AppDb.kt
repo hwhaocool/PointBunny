@@ -9,6 +9,8 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Update
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -83,9 +85,37 @@ interface BadgeDao {
     suspend fun deleteAll()
 }
 
+@Dao
+interface ReasonDao {
+
+    @Query("SELECT * FROM reasons WHERE type = :type ORDER BY sortOrder ASC, id ASC")
+    fun flowByType(type: String): Flow<List<ReasonEntity>>
+
+    @Query("SELECT * FROM reasons WHERE type = :type ORDER BY sortOrder ASC, id ASC")
+    suspend fun allByType(type: String): List<ReasonEntity>
+
+    @Query("SELECT COUNT(*) FROM reasons")
+    suspend fun count(): Int
+
+    @Insert
+    suspend fun insert(r: ReasonEntity): Long
+
+    @Insert
+    suspend fun insertAll(rs: List<ReasonEntity>)
+
+    @Update
+    suspend fun update(r: ReasonEntity)
+
+    @Query("DELETE FROM reasons WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("DELETE FROM reasons")
+    suspend fun deleteAll()
+}
+
 @Database(
-    entities = [RecordEntity::class, WishEntity::class, BadgeEntity::class],
-    version = 1,
+    entities = [RecordEntity::class, WishEntity::class, BadgeEntity::class, ReasonEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -93,10 +123,26 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recordDao(): RecordDao
     abstract fun wishDao(): WishDao
     abstract fun badgeDao(): BadgeDao
+    abstract fun reasonDao(): ReasonDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        /** v1 -> v2：新增事项表 reasons */
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `reasons` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`type` TEXT NOT NULL, " +
+                        "`emoji` TEXT NOT NULL, " +
+                        "`name` TEXT NOT NULL, " +
+                        "`freeText` INTEGER NOT NULL, " +
+                        "`sortOrder` INTEGER NOT NULL)"
+                )
+            }
+        }
 
         fun get(context: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {
@@ -105,6 +151,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "point_bunny.db"
                 )
+                    .addMigrations(MIGRATION_1_2)
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }

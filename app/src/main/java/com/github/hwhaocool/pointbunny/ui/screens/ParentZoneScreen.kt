@@ -41,6 +41,7 @@ import com.github.hwhaocool.pointbunny.ui.theme.White
  * 家长专区（信息导航页）：
  *  - 数据概览（余额 / 记录数 / 心愿数）
  *  - 「数据分享」入口（JSON 备份已挪到 DataShareScreen）
+ *  - 「事项管理」入口（自由增删改攒分/花分事项）
  *  - 「关于」入口（应用信息 / 本机信息）
  *  - 「清空全部数据」保留在本页（双重确认）
  */
@@ -50,6 +51,7 @@ fun ParentZoneScreen(
     recordCount: Int,
     wishCount: Int,
     onDataShare: () -> Unit,
+    onReasonManage: () -> Unit,
     onAbout: () -> Unit,
     onClearAll: () -> Unit
 ) {
@@ -96,6 +98,8 @@ fun ParentZoneScreen(
 
             // ---- 导航入口 ----
             NavEntry("📤", "数据分享", "备份 / 复制 JSON 数据", onDataShare)
+            Spacer(Modifier.height(10.dp))
+            NavEntry("🏷️", "事项管理", "新增 / 修改 / 删除事项", onReasonManage)
             Spacer(Modifier.height(10.dp))
             NavEntry("ℹ️", "关于", "应用信息 · 本机信息", onAbout)
 

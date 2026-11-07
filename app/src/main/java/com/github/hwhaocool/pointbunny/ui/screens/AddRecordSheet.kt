@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.hwhaocool.pointbunny.data.ReasonEntity
 import com.github.hwhaocool.pointbunny.data.RecordEntity
 import com.github.hwhaocool.pointbunny.ui.comp.NumberKeyboard
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
@@ -47,46 +48,26 @@ import com.github.hwhaocool.pointbunny.ui.theme.TextBrownLight
 import com.github.hwhaocool.pointbunny.ui.theme.WarmOrange
 import com.github.hwhaocool.pointbunny.ui.theme.White
 
-/** 攒分原因（与原型一致，💃 跳舞为新增，✏️ 可自定义） */
-val EARN_REASONS = listOf(
-    "🧹" to "帮忙做家务",
-    "👕" to "自己穿衣服",
-    "🍚" to "好好吃饭",
-    "🦷" to "按时刷牙",
-    "💃" to "跳舞",
-    "⭐" to "表现棒棒的",
-    "✏️" to "其他好事"
-)
-
-/** 花分事项（与原型一致） */
-val SPEND_REASONS = listOf(
-    "🧸" to "买个玩具",
-    "📺" to "看动画片",
-    "🍦" to "吃冰淇淋",
-    "🎡" to "去游乐场",
-    "🍭" to "买零食",
-    "✏️" to "其他事情"
-)
-
 private val QUICK_POINTS = listOf(1, 2, 5, 10, 20)
 
 /**
  * 攒分 / 花分 底部弹窗：
- * 大数字键盘 + 快捷加分 + 原因选择 + 保存。
+ * 大数字键盘 + 快捷加分 + 事项选择 + 保存。
  * 花分超过余额时：抖动警告 + 提示，不关闭弹窗。
+ * @param reasons 事项列表（来自 ViewModel，可在家长专区自由管理）
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddRecordSheet(
     type: String,                      // "earn" / "spend"
     balance: Int,
+    reasons: List<ReasonEntity>,
     onDismiss: () -> Unit,
     onSave: (points: Int, reason: String, emoji: String) -> Unit,
     onWarn: (String) -> Unit,          // 余额不足等警告回调（显示 toast）
     editTarget: RecordEntity? = null   // 非空 = 编辑模式
 ) {
     val isEarn = type == "earn"
-    val reasons = if (isEarn) EARN_REASONS else SPEND_REASONS
     val themeColor = if (isEarn) MintGreen else WarmOrange
     val isEdit = editTarget != null
     // 编辑花分记录时，先还原本条已扣的积分，避免误判余额不足
@@ -96,15 +77,16 @@ fun AddRecordSheet(
     var reasonIndex by remember(editTarget) {
         mutableIntStateOf(
             editTarget?.let { t ->
-                val idx = reasons.indexOfFirst { it.second == t.reason }
-                if (idx >= 0) idx else reasons.indexOfFirst { it.first == "✏️" }.coerceAtLeast(0)
+                val idx = reasons.indexOfFirst { it.name == t.reason }
+                if (idx >= 0) idx
+                else reasons.indexOfFirst { it.freeText }.coerceAtLeast(0)
             } ?: 0
         )
     }
     var customReason by remember(editTarget) {
         mutableStateOf(
             editTarget?.let { t ->
-                if (reasons.any { it.second == t.reason }) "" else t.reason
+                if (reasons.any { it.name == t.reason }) "" else t.reason
             } ?: ""
         )
     }
@@ -112,8 +94,9 @@ fun AddRecordSheet(
     var shakeKey by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
 
-    // 当前选中的是否为「其他」项（✏️ 可编辑）
-    val isOtherSelected = reasons[reasonIndex].first == "✏️"
+    // 当前选中的事项（可能为 null，例如列表为空）
+    val selectedReason = reasons.getOrNull(reasonIndex)
+    val isFreeTextSelected = selectedReason?.freeText == true
 
     // 抖动动画：余额不足时触发
     LaunchedEffect(shakeKey) {
@@ -183,10 +166,7 @@ fun AddRecordSheet(
             ) {
                 QUICK_POINTS.forEach { p ->
                     Surface(
-                        onClick = {
-                            input = p.toString()
-                            reasonIndex = reasonIndex // 保持
-                        },
+                        onClick = { input = p.toString() },
                         shape = RoundedCornerShape(50),
                         color = CandyPinkPale,
                         modifier = Modifier.weight(1f)
@@ -205,51 +185,60 @@ fun AddRecordSheet(
 
             Spacer(Modifier.height(14.dp))
 
-            // ---- 原因选择（2 列 3 行） ----
-            reasons.chunked(2).forEach { rowPair ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    rowPair.forEach { (emoji, text) ->
-                        val idx = reasons.indexOfFirst { it.second == text }
-                        val selected = reasonIndex == idx
-                        Surface(
-                            onClick = { reasonIndex = idx },
-                            shape = RoundedCornerShape(18.dp),
-                            color = if (selected) themeColor.copy(alpha = 0.16f) else White,
-                            border = if (selected)
-                                BorderStroke(2.dp, themeColor)
-                            else null,
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 52.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp)
+            // ---- 事项选择（2 列） ----
+            if (reasons.isEmpty()) {
+                Text(
+                    "还没有事项哦，请先到家长专区「事项管理」添加～",
+                    fontSize = 13.sp,
+                    color = TextBrownLight,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            } else {
+                reasons.chunked(2).forEach { rowPair ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        rowPair.forEach { reason ->
+                            val idx = reasons.indexOfFirst { it.id == reason.id }
+                            val selected = reasonIndex == idx
+                            Surface(
+                                onClick = { reasonIndex = idx },
+                                shape = RoundedCornerShape(18.dp),
+                                color = if (selected) themeColor.copy(alpha = 0.16f) else White,
+                                border = if (selected)
+                                    BorderStroke(2.dp, themeColor)
+                                else null,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 52.dp)
                             ) {
-                                Text(emoji, fontSize = 20.sp)
-                                Spacer(Modifier.size(6.dp))
-                                Text(
-                                    text,
-                                    fontSize = 14.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                    color = TextBrown
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp)
+                                ) {
+                                    Text(reason.emoji, fontSize = 20.sp)
+                                    Spacer(Modifier.size(6.dp))
+                                    Text(
+                                        reason.name,
+                                        fontSize = 14.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                        color = TextBrown
+                                    )
+                                }
                             }
                         }
+                        if (rowPair.size == 1) Spacer(Modifier.weight(1f))
                     }
-                    if (rowPair.size == 1) Spacer(Modifier.weight(1f))
+                    Spacer(Modifier.height(10.dp))
                 }
-                Spacer(Modifier.height(10.dp))
             }
 
             Spacer(Modifier.height(6.dp))
 
-            // ---- 自定义「其他」原因（选中 ✏️ 后可编辑） ----
-            if (isOtherSelected) {
+            // ---- 自由输入（仅对 freeText 事项显示） ----
+            if (isFreeTextSelected) {
                 OutlinedTextField(
                     value = customReason,
                     onValueChange = { customReason = it.take(12) },
@@ -295,11 +284,15 @@ fun AddRecordSheet(
                         onWarn("积分不够啦，先和爸爸妈妈一起攒一攒吧😢")
                         return@Surface
                     }
-                    val (emoji, reason) = reasons[reasonIndex]
-                    val finalReason = if (isOtherSelected) {
-                        customReason.trim().ifEmpty { reason }
-                    } else reason
-                    onSave(points, finalReason, emoji)
+                    val reason = reasons.getOrNull(reasonIndex)
+                    if (reason == null) {
+                        onWarn("请先到家长专区添加事项～")
+                        return@Surface
+                    }
+                    val finalReason = if (reason.freeText) {
+                        customReason.trim().ifEmpty { reason.name }
+                    } else reason.name
+                    onSave(points, finalReason, reason.emoji)
                 },
                 shape = RoundedCornerShape(50),
                 color = themeColor,

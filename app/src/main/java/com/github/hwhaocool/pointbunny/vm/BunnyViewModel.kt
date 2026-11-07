@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.hwhaocool.pointbunny.data.AppDatabase
 import com.github.hwhaocool.pointbunny.data.BadgeEntity
+import com.github.hwhaocool.pointbunny.data.ReasonEntity
 import com.github.hwhaocool.pointbunny.data.RecordEntity
 import com.github.hwhaocool.pointbunny.data.WishEntity
 import com.github.hwhaocool.pointbunny.logic.BadgeDefs
@@ -22,6 +23,27 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+/** 默认攒分事项（emoji, 名称, 是否自由输入） */
+private val DEFAULT_EARN_REASONS = listOf(
+    Triple("🧹", "帮忙做家务", false),
+    Triple("👕", "自己穿衣服", false),
+    Triple("🍚", "好好吃饭", false),
+    Triple("🦷", "按时刷牙", false),
+    Triple("💃", "跳舞", false),
+    Triple("⭐", "表现棒棒的", false),
+    Triple("✏️", "其他好事", true)
+)
+
+/** 默认花分事项 */
+private val DEFAULT_SPEND_REASONS = listOf(
+    Triple("🧸", "买个玩具", false),
+    Triple("📺", "看动画片", false),
+    Triple("🍦", "吃冰淇淋", false),
+    Triple("🎡", "去游乐场", false),
+    Triple("🍭", "买零食", false),
+    Triple("✏️", "其他事情", true)
+)
+
 /**
  * 全局唯一 ViewModel：持有记录 / 心愿 / 勋章 / 余额，
  * 并提供保存、删除、兑换、导出 JSON、清空等操作。
@@ -32,6 +54,7 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
     private val recordDao = db.recordDao()
     private val wishDao = db.wishDao()
     private val badgeDao = db.badgeDao()
+    private val reasonDao = db.reasonDao()
 
     private val isoFmt: DateTimeFormatter =
         DateTimeFormatter.ISO_OFFSET_DATE_TIME
@@ -47,6 +70,12 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
     val balance: StateFlow<Int> = recordDao.flowBalance()
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
+    val earnReasons: StateFlow<List<ReasonEntity>> = reasonDao.flowByType("earn")
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val spendReasons: StateFlow<List<ReasonEntity>> = reasonDao.flowByType("spend")
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
     val unlockedBadges: StateFlow<Set<String>> = badgeDao.flowAll()
         .map { list -> list.map { it.key }.toSet() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
@@ -54,6 +83,22 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
     val badgeUnlockTimes: StateFlow<Map<String, Long>> = badgeDao.flowAll()
         .map { list -> list.associate { it.key to it.unlockedAt } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    // 首次启动：若事项表为空，写入默认事项
+    init {
+        viewModelScope.launch {
+            if (reasonDao.count() == 0) {
+                val defaults = mutableListOf<ReasonEntity>()
+                DEFAULT_EARN_REASONS.forEachIndexed { i, (e, n, f) ->
+                    defaults += ReasonEntity(type = "earn", emoji = e, name = n, freeText = f, sortOrder = i)
+                }
+                DEFAULT_SPEND_REASONS.forEachIndexed { i, (e, n, f) ->
+                    defaults += ReasonEntity(type = "spend", emoji = e, name = n, freeText = f, sortOrder = i)
+                }
+                reasonDao.insertAll(defaults)
+            }
+        }
+    }
 
     // ---------- 全局 Toast 通道 ----------
 
@@ -272,6 +317,43 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: Exception) {
                 _toast.value = "导入失败：JSON 格式不对哦"
             }
+        }
+    }
+
+    // ---------- 事项管理 ----------
+
+    /** 新增事项（type 决定攒分/花分），保存后在对应页面生效 */
+    fun addReason(type: String, emoji: String, name: String, freeText: Boolean) {
+        viewModelScope.launch {
+            val next = (reasonDao.allByType(type).maxOfOrNull { it.sortOrder } ?: -1) + 1
+            reasonDao.insert(
+                ReasonEntity(
+                    type = type,
+                    emoji = emoji,
+                    name = name,
+                    freeText = freeText,
+                    sortOrder = next
+                )
+            )
+            _toast.value = "✅ 已添加「$name」"
+        }
+    }
+
+    /** 修改事项的名称/emoji/自由输入开关 */
+    fun updateReason(reason: ReasonEntity, emoji: String, name: String, freeText: Boolean) {
+        viewModelScope.launch {
+            reasonDao.update(
+                reason.copy(emoji = emoji, name = name, freeText = freeText)
+            )
+            _toast.value = "✅ 已保存「$name」"
+        }
+    }
+
+    /** 删除事项 */
+    fun deleteReason(reason: ReasonEntity) {
+        viewModelScope.launch {
+            reasonDao.delete(reason.id)
+            _toast.value = "已删除「${reason.name}」"
         }
     }
 }

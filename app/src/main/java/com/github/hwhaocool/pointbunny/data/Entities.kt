@@ -40,3 +40,17 @@ data class BadgeEntity(
     @PrimaryKey val key: String,
     val unlockedAt: Long
 )
+
+/**
+ * 事项（攒分原因 / 花分事项），可自由增删改。
+ * freeText=true 表示选中后允许自由输入文字（如「其他好事」）。
+ */
+@Entity(tableName = "reasons")
+data class ReasonEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val type: String,          // "earn" = 攒分, "spend" = 花分
+    val emoji: String,
+    val name: String,
+    val freeText: Boolean = false,
+    val sortOrder: Int = 0
+)

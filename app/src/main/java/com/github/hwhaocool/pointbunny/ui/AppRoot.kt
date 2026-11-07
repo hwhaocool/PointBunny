@@ -38,6 +38,7 @@ import com.github.hwhaocool.pointbunny.ui.screens.DataShareScreen
 import com.github.hwhaocool.pointbunny.ui.screens.HomeScreen
 import com.github.hwhaocool.pointbunny.ui.screens.HistoryScreen
 import com.github.hwhaocool.pointbunny.ui.screens.ParentZoneScreen
+import com.github.hwhaocool.pointbunny.ui.screens.ReasonManageScreen
 import com.github.hwhaocool.pointbunny.ui.screens.StatsScreen
 import com.github.hwhaocool.pointbunny.ui.screens.WishScreen
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
@@ -62,6 +63,8 @@ fun AppRoot(vm: BunnyViewModel = viewModel()) {
     val balance by vm.balance.collectAsState()
     val unlocked by vm.unlockedBadges.collectAsState()
     val unlockTimes by vm.badgeUnlockTimes.collectAsState()
+    val earnReasons by vm.earnReasons.collectAsState()
+    val spendReasons by vm.spendReasons.collectAsState()
     val toast by vm.toast.collectAsState()
     val context = LocalContext.current
 
@@ -137,6 +140,7 @@ fun AppRoot(vm: BunnyViewModel = viewModel()) {
                         recordCount = records.size,
                         wishCount = wishes.size,
                         onDataShare = { current = "datashare" },
+                        onReasonManage = { current = "reasonmanage" },
                         onAbout = { current = "about" },
                         onClearAll = vm::clearAllData
                     )
@@ -144,6 +148,15 @@ fun AppRoot(vm: BunnyViewModel = viewModel()) {
                         json = exportJson,
                         onBack = { current = "parent" },
                         onImport = vm::importData,
+                        onWarn = vm::showToast
+                    )
+                    "reasonmanage" -> ReasonManageScreen(
+                        earnReasons = earnReasons,
+                        spendReasons = spendReasons,
+                        onBack = { current = "parent" },
+                        onAdd = vm::addReason,
+                        onUpdate = vm::updateReason,
+                        onDelete = vm::deleteReason,
                         onWarn = vm::showToast
                     )
                     "about" -> AboutScreen(
@@ -168,6 +181,7 @@ fun AppRoot(vm: BunnyViewModel = viewModel()) {
                 AddRecordSheet(
                     type = type,
                     balance = balance,
+                    reasons = if (type == "earn") earnReasons else spendReasons,
                     onDismiss = { showAddSheet = null },
                     onSave = { points, reason, emoji ->
                         vm.addRecord(type, points, reason, emoji)
@@ -182,6 +196,7 @@ fun AppRoot(vm: BunnyViewModel = viewModel()) {
                 AddRecordSheet(
                     type = record.type,
                     balance = balance,
+                    reasons = if (record.type == "earn") earnReasons else spendReasons,
                     onDismiss = { editRecord = null },
                     onSave = { points, reason, emoji ->
                         vm.updateRecord(record, points, reason, emoji)
