@@ -1,7 +1,12 @@
 package com.github.hwhaocool.pointbunny.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -74,6 +79,8 @@ fun AddRecordSheet(
     val spendLimit = if (!isEarn) balance + (editTarget?.points ?: 0) else balance
 
     var input by remember(editTarget) { mutableStateOf(editTarget?.points?.toString() ?: "") }
+    // 小键盘默认折叠：点数字区或下方开关可展开，省出空间给事项和保存按钮
+    var keypadExpanded by remember(editTarget) { mutableStateOf(false) }
     var reasonIndex by remember(editTarget) {
         mutableIntStateOf(
             editTarget?.let { t ->
@@ -140,6 +147,7 @@ fun AddRecordSheet(
 
             // ---- 数字显示区（超余额时抖动） ----
             Surface(
+                onClick = { keypadExpanded = true },
                 shape = RoundedCornerShape(22.dp),
                 color = White,
                 border = BorderStroke(2.dp, themeColor),
@@ -255,18 +263,55 @@ fun AddRecordSheet(
                 Spacer(Modifier.height(10.dp))
             }
 
-            // ---- 大数字键盘 ----
-            NumberKeyboard(
-                onDigit = { d ->
-                    if (input.length < 5) {
-                        val s = input + d.toString()
-                        // 去掉前导零
-                        input = s.toIntOrNull()?.toString() ?: input
-                    }
-                },
-                onClear = { input = "" },
-                onBackspace = { input = if (input.isNotEmpty()) input.dropLast(1) else "" }
-            )
+            // ---- 小键盘折叠开关 ----
+            Surface(
+                onClick = { keypadExpanded = !keypadExpanded },
+                shape = RoundedCornerShape(50),
+                color = if (keypadExpanded) themeColor.copy(alpha = 0.16f) else White,
+                border = BorderStroke(2.dp, themeColor),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(vertical = 9.dp)
+                ) {
+                    Text(
+                        if (keypadExpanded) "收起数字键盘" else "展开数字键盘",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextBrown
+                    )
+                    Spacer(Modifier.size(6.dp))
+                    Text(
+                        if (keypadExpanded) "▲" else "▼",
+                        fontSize = 13.sp,
+                        color = TextBrown
+                    )
+                }
+            }
+
+            // ---- 大数字键盘（默认折叠） ----
+            AnimatedVisibility(
+                visible = keypadExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column {
+                    Spacer(Modifier.height(10.dp))
+                    NumberKeyboard(
+                        onDigit = { d ->
+                            if (input.length < 5) {
+                                val s = input + d.toString()
+                                // 去掉前导零
+                                input = s.toIntOrNull()?.toString() ?: input
+                            }
+                        },
+                        onClear = { input = "" },
+                        onBackspace = { input = if (input.isNotEmpty()) input.dropLast(1) else "" }
+                    )
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 
