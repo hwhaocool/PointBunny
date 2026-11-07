@@ -13,6 +13,9 @@ local.properties
 captures/
 .DS_Store
 
+# 本地构建脚本（不入库，仅保留在本机）
+/build.sh
+
 # 构建产物
 *.apk
 *.aab
