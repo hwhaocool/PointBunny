@@ -5,6 +5,31 @@
 技术栈：**Kotlin + Jetpack Compose (Material 3) + Room**  
 当前版本：**v1.1（versionCode 2）**
 
+## 预览
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/01-home.jpg" alt="首页" width="100%">
+      <br><sub>首页</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/02-history.jpg" alt="积分历史" width="100%">
+      <br><sub>积分历史</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/03-summary.jpg" alt="积分统计" width="100%">
+      <br><sub>积分统计</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/04-settings.jpg" alt="家长专区" width="100%">
+      <br><sub>家长专区</sub>
+    </td>
+  </tr>
+</table>
+
 ## ✨ 功能清单
 
 | 功能 | 说明 |
@@ -29,7 +54,6 @@
 ```
 PointBunny/
 ├── build.gradle.kts / settings.gradle.kts / gradle.properties
-├── build.sh                              # 命令行一键构建脚本
 ├── gradle/wrapper/gradle-wrapper.properties
 └── app/
     ├── build.gradle.kts                  # minSdk 26 / targetSdk 34 / version 1.1
@@ -58,24 +82,12 @@ PointBunny/
 
 **方式二：命令行**
 
-仓库自带构建脚本，默认使用 `/opt/sdk` 下的 JDK 17、Gradle 和 Android SDK：
+需要 JDK 17、Gradle 8.x 和 Android SDK Platform 34，使用本机 Gradle 构建：
 
 ```bash
 cd PointBunny
-./build.sh          # 等价于 ./build.sh debug
-./build.sh release  # 构建 release 包
-```
-
-可通过环境变量覆盖路径：`JAVA_HOME_OVERRIDE`、`GRADLE_HOME`、`ANDROID_HOME`。要求：
-
-- JDK 17
-- Gradle 8.x（脚本默认 `/opt/sdk/gradle/gradle-8.14`）
-- Android SDK Platform 34
-
-也可以直接使用本机 Gradle：
-
-```bash
-gradle assembleDebug
+gradle assembleDebug   # 构建 debug 包
+gradle assembleRelease # 构建 release 包
 ```
 
 APK 输出在 `app/build/outputs/apk/debug/`，产物命名为 `PointBunny-<版本号>-<构建类型>.apk`（当前为 `PointBunny-1.1-debug.apk`）。
