@@ -115,7 +115,7 @@ interface ReasonDao {
 
 @Database(
     entities = [RecordEntity::class, WishEntity::class, BadgeEntity::class, ReasonEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -155,6 +155,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v3 -> v4：事项表新增「默认积分」列（单位 0.1 分，0 表示不预设） */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE `reasons` ADD COLUMN `defaultPoints` INTEGER NOT NULL DEFAULT 0"
+                )
+            }
+        }
+
         fun get(context: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
@@ -162,7 +171,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "point_bunny.db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }

@@ -328,8 +328,14 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---------- 事项管理 ----------
 
-    /** 新增事项（type 决定攒分/花分），保存后在对应页面生效 */
-    fun addReason(type: String, emoji: String, name: String, freeText: Boolean) {
+    /** 新增事项（type 决定攒分/花分，defaultPoints 单位 0.1 分），保存后在对应页面生效 */
+    fun addReason(
+        type: String,
+        emoji: String,
+        name: String,
+        freeText: Boolean,
+        defaultPoints: Int = 0
+    ) {
         viewModelScope.launch {
             val next = (reasonDao.allByType(type).maxOfOrNull { it.sortOrder } ?: -1) + 1
             reasonDao.insert(
@@ -338,18 +344,30 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
                     emoji = emoji,
                     name = name,
                     freeText = freeText,
-                    sortOrder = next
+                    sortOrder = next,
+                    defaultPointsTenths = defaultPoints.coerceAtLeast(0)
                 )
             )
             _toast.value = "✅ 已添加「$name」"
         }
     }
 
-    /** 修改事项的名称/emoji/自由输入开关 */
-    fun updateReason(reason: ReasonEntity, emoji: String, name: String, freeText: Boolean) {
+    /** 修改事项的名称/emoji/自由输入开关/默认积分（单位 0.1 分） */
+    fun updateReason(
+        reason: ReasonEntity,
+        emoji: String,
+        name: String,
+        freeText: Boolean,
+        defaultPoints: Int = 0
+    ) {
         viewModelScope.launch {
             reasonDao.update(
-                reason.copy(emoji = emoji, name = name, freeText = freeText)
+                reason.copy(
+                    emoji = emoji,
+                    name = name,
+                    freeText = freeText,
+                    defaultPointsTenths = defaultPoints.coerceAtLeast(0)
+                )
             )
             _toast.value = "✅ 已保存「$name」"
         }

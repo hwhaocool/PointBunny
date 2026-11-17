@@ -55,5 +55,8 @@ data class ReasonEntity(
     val emoji: String,
     val name: String,
     val freeText: Boolean = false,
-    val sortOrder: Int = 0
+    val sortOrder: Int = 0,
+    // 默认积分，单位 0.1 分；0 表示不预设（记账选中该事项时自动带出，仍可修改）
+    @ColumnInfo(name = "defaultPoints", defaultValue = "0")
+    val defaultPointsTenths: Int = 0
 )

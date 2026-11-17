@@ -81,10 +81,6 @@ fun AddRecordSheet(
     // 编辑花分记录时，先还原本条已扣的积分，避免误判余额不足
     val spendLimit = if (!isEarn) balance + (editTarget?.pointsTenths ?: 0) else balance
 
-    // 输入框内容（支持一位小数，如 "12.5"）
-    var input by remember(editTarget) {
-        mutableStateOf(editTarget?.let { Points.format(it.pointsTenths) } ?: "")
-    }
     // 小键盘默认折叠：点数字区或下方开关可展开，省出空间给事项和保存按钮
     var keypadExpanded by remember(editTarget) { mutableStateOf(false) }
     var reasonIndex by remember(editTarget) {
@@ -96,6 +92,19 @@ fun AddRecordSheet(
             } ?: 0
         )
     }
+    // 事项预设的默认积分文本（0 = 不预设）
+    fun defaultPointsTextOf(r: ReasonEntity?): String =
+        r?.defaultPointsTenths?.takeIf { it > 0 }?.let { Points.format(it) } ?: ""
+
+    // 输入框内容（支持一位小数，如 "12.5"）；新增时自动带出首个事项的默认积分
+    var input by remember(editTarget) {
+        mutableStateOf(
+            editTarget?.let { Points.format(it.pointsTenths) }
+                ?: defaultPointsTextOf(reasons.getOrNull(reasonIndex))
+        )
+    }
+    // 是否已手动改过积分：没改过时切换事项会重新带出该事项的默认积分，改过则保留用户输入
+    var inputDirty by remember(editTarget) { mutableStateOf(editTarget != null) }
     var customReason by remember(editTarget) {
         mutableStateOf(
             editTarget?.let { t ->
@@ -180,7 +189,10 @@ fun AddRecordSheet(
             ) {
                 QUICK_POINTS.forEach { p ->
                     Surface(
-                        onClick = { input = p.toString() },
+                        onClick = {
+                            input = p.toString()
+                            inputDirty = true
+                        },
                         shape = RoundedCornerShape(50),
                         color = CandyPinkPale,
                         modifier = Modifier.weight(1f)
@@ -217,7 +229,11 @@ fun AddRecordSheet(
                             val idx = reasons.indexOfFirst { it.id == reason.id }
                             val selected = reasonIndex == idx
                             Surface(
-                                onClick = { reasonIndex = idx },
+                                onClick = {
+                                    reasonIndex = idx
+                                    // 没手动改过积分时，自动带出该事项的默认积分
+                                    if (!inputDirty) input = defaultPointsTextOf(reason)
+                                },
                                 shape = RoundedCornerShape(18.dp),
                                 color = if (selected) themeColor.copy(alpha = 0.16f) else White,
                                 border = if (selected)
@@ -306,10 +322,22 @@ fun AddRecordSheet(
                 Column {
                     Spacer(Modifier.height(10.dp))
                     NumberKeyboard(
-                        onDigit = { d -> input = Points.appendDigit(input, d) },
-                        onDot = { input = Points.appendDot(input) },
-                        onClear = { input = "" },
-                        onBackspace = { input = if (input.isNotEmpty()) input.dropLast(1) else "" }
+                        onDigit = { d ->
+                            input = Points.appendDigit(input, d)
+                            inputDirty = true
+                        },
+                        onDot = {
+                            input = Points.appendDot(input)
+                            inputDirty = true
+                        },
+                        onClear = {
+                            input = ""
+                            inputDirty = true
+                        },
+                        onBackspace = {
+                            input = if (input.isNotEmpty()) input.dropLast(1) else ""
+                            inputDirty = true
+                        }
                     )
                 }
             }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,10 +34,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.hwhaocool.pointbunny.data.ReasonEntity
+import com.github.hwhaocool.pointbunny.logic.Points
 import com.github.hwhaocool.pointbunny.ui.comp.BackHeader
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkPale
@@ -59,8 +62,9 @@ private val EMOJI_CHOICES = listOf(
 )
 
 /**
- * 事项管理：自由新增 / 修改 / 删除攒分、花分事项（名称 + emoji）。
- * 保存后立即在「攒积分」「花积分」页面生效。
+ * 事项管理：自由新增 / 修改 / 删除攒分、花分事项（名称 + emoji + 默认积分）。
+ * 保存后立即在「攒积分」「花积分」页面生效；设置了默认积分的事项，
+ * 记账时选中它会自动带出积分，仍可手动修改。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,8 +72,8 @@ fun ReasonManageScreen(
     earnReasons: List<ReasonEntity>,
     spendReasons: List<ReasonEntity>,
     onBack: () -> Unit,
-    onAdd: (type: String, emoji: String, name: String, freeText: Boolean) -> Unit,
-    onUpdate: (reason: ReasonEntity, emoji: String, name: String, freeText: Boolean) -> Unit,
+    onAdd: (type: String, emoji: String, name: String, freeText: Boolean, defaultPoints: Int) -> Unit,
+    onUpdate: (reason: ReasonEntity, emoji: String, name: String, freeText: Boolean, defaultPoints: Int) -> Unit,
     onDelete: (reason: ReasonEntity) -> Unit,
     onWarn: (String) -> Unit
 ) {
@@ -79,6 +83,8 @@ fun ReasonManageScreen(
     var formEmoji by remember { mutableStateOf(EMOJI_CHOICES.first()) }
     var formName by remember { mutableStateOf("") }
     var formFreeText by remember { mutableStateOf(false) }
+    // 默认积分输入文本（单位分，可带一位小数；空 = 不预设）
+    var formDefaultPoints by remember { mutableStateOf("") }
     var pendingDelete by remember { mutableStateOf<ReasonEntity?>(null) }
 
     fun openAdd(type: String) {
@@ -87,6 +93,7 @@ fun ReasonManageScreen(
         formEmoji = EMOJI_CHOICES.first()
         formName = ""
         formFreeText = false
+        formDefaultPoints = ""
         showForm = true
     }
 
@@ -96,6 +103,7 @@ fun ReasonManageScreen(
         formEmoji = r.emoji
         formName = r.name
         formFreeText = r.freeText
+        formDefaultPoints = if (r.defaultPointsTenths > 0) Points.format(r.defaultPointsTenths) else ""
         showForm = true
     }
 
@@ -215,6 +223,25 @@ fun ReasonManageScreen(
                     }
                     Switch(checked = formFreeText, onCheckedChange = { formFreeText = it })
                 }
+                Spacer(Modifier.height(12.dp))
+
+                // ---- 默认积分 ----
+                OutlinedTextField(
+                    value = formDefaultPoints,
+                    onValueChange = { formDefaultPoints = Points.sanitizeInput(it) },
+                    label = { Text("默认积分（可留空）", fontSize = 13.sp) },
+                    placeholder = { Text("如 2 或 1.5，记账时自动带出", fontSize = 13.sp) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    "留空表示不预设；记账选中该事项时会自动填上这个积分，还可以再修改",
+                    fontSize = 11.sp,
+                    color = TextBrownLight,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                )
                 Spacer(Modifier.height(14.dp))
 
                 // ---- emoji 选择 ----
@@ -232,10 +259,11 @@ fun ReasonManageScreen(
                             onWarn("先写一个名称哦～")
                             return@Surface
                         }
+                        val defaultPoints = Points.parse(formDefaultPoints) ?: 0
                         if (editingReason == null) {
-                            onAdd(formType, formEmoji, name, formFreeText)
+                            onAdd(formType, formEmoji, name, formFreeText, defaultPoints)
                         } else {
-                            onUpdate(editingReason!!, formEmoji, name, formFreeText)
+                            onUpdate(editingReason!!, formEmoji, name, formFreeText, defaultPoints)
                         }
                         showForm = false
                     },
@@ -285,8 +313,14 @@ private fun ReasonRow(
             Spacer(Modifier.size(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(reason.name, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextBrown)
-                if (reason.freeText) {
-                    Text("自由输入", fontSize = 11.sp, color = TextBrownLight)
+                val subtitle = buildList {
+                    if (reason.freeText) add("自由输入")
+                    if (reason.defaultPointsTenths > 0) {
+                        add("默认 ${Points.format(reason.defaultPointsTenths)} 分")
+                    }
+                }.joinToString(" · ")
+                if (subtitle.isNotEmpty()) {
+                    Text(subtitle, fontSize = 11.sp, color = TextBrownLight)
                 }
             }
             IconButton(onClick = onEdit, modifier = Modifier.size(34.dp)) {
