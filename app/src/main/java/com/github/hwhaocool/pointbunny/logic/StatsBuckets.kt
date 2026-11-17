@@ -13,10 +13,10 @@ enum class StatsMode(val label: String) {
     WEEK("本周"), MONTH("本月"), YEAR("本年"), CUSTOM("选日期")
 }
 
-/** 柱状图的一个分桶：标签 + 该区间内攒分/花分总和 */
+/** 柱状图的一个分桶：标签 + 该区间内攒分/花分总和（单位 0.1 分） */
 data class StatBucket(val label: String, val earn: Int, val spend: Int)
 
-/** 最爱攒分原因条目（Top 榜） */
+/** 最爱攒分原因条目（Top 榜，total 单位 0.1 分） */
 data class ReasonStat(val emoji: String, val reason: String, val total: Int)
 
 /** 统计分桶逻辑 */
@@ -120,14 +120,14 @@ object StatsLogic {
             val d = toLocalDate(r.time)
             accs.forEach { a ->
                 if (!d.isBefore(a.start) && !d.isAfter(a.end)) {
-                    if (r.isEarn) a.earn += r.points else a.spend += r.points
+                    if (r.isEarn) a.earn += r.pointsTenths else a.spend += r.pointsTenths
                 }
             }
         }
         return accs.map { StatBucket(it.label, it.earn, it.spend) }
     }
 
-    /** 区间内攒分 / 花分总和 */
+    /** 区间内攒分 / 花分总和（单位 0.1 分） */
     fun totalsIn(
         start: LocalDate,
         end: LocalDate,
@@ -138,7 +138,7 @@ object StatsLogic {
         records.forEach { r ->
             val d = toLocalDate(r.time)
             if (!d.isBefore(start) && !d.isAfter(end)) {
-                if (r.isEarn) earn += r.points else spend += r.points
+                if (r.isEarn) earn += r.pointsTenths else spend += r.pointsTenths
             }
         }
         return earn to spend
@@ -159,7 +159,7 @@ object StatsLogic {
                 ReasonStat(
                     emoji = list.first().first.emoji,
                     reason = list.first().first.reason,
-                    total = list.sumOf { it.first.points }
+                    total = list.sumOf { it.first.pointsTenths }
                 )
             }
             .sortedByDescending { it.total }

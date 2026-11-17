@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.hwhaocool.pointbunny.data.RecordEntity
+import com.github.hwhaocool.pointbunny.logic.Points
 import com.github.hwhaocool.pointbunny.logic.StatsLogic
 import com.github.hwhaocool.pointbunny.logic.StatsMode
 import com.github.hwhaocool.pointbunny.ui.comp.BunnyBarChart
@@ -127,9 +128,9 @@ fun StatsScreen(records: List<RecordEntity>) {
 
         // ---- 攒 / 花 / 结余 三卡 ----
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StatCard("攒分", "+$totalEarn", MintGreen, Modifier.weight(1f))
-            StatCard("花分", "-$totalSpend", WarmOrange, Modifier.weight(1f))
-            StatCard("结余", "${totalEarn - totalSpend}", CandyPink, Modifier.weight(1f))
+            StatCard("攒分", "+${Points.format(totalEarn)}", MintGreen, Modifier.weight(1f))
+            StatCard("花分", "-${Points.format(totalSpend)}", WarmOrange, Modifier.weight(1f))
+            StatCard("结余", Points.format(totalEarn - totalSpend), CandyPink, Modifier.weight(1f))
         }
 
         Spacer(Modifier.height(14.dp))
@@ -196,7 +197,7 @@ fun StatsScreen(records: List<RecordEntity>) {
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                "${r.total} 分",
+                                "${Points.format(r.total)} 分",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = CandyPink

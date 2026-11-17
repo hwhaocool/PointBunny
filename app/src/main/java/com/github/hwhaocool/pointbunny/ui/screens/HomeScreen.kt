@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Settings
+import com.github.hwhaocool.pointbunny.logic.Points
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkLight
 import com.github.hwhaocool.pointbunny.ui.theme.MintGreen
@@ -47,6 +48,7 @@ import com.github.hwhaocool.pointbunny.ui.theme.White
 
 /**
  * 首页：小兔子 + 积分宝藏 + 两大按钮 + 四个快捷入口
+ * @param balance 当前余额，单位 0.1 分
  */
 @Composable
 fun HomeScreen(
@@ -111,7 +113,7 @@ fun HomeScreen(
                 Spacer(Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        balance.toString(),
+                        Points.format(balance),
                         fontSize = 62.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = White

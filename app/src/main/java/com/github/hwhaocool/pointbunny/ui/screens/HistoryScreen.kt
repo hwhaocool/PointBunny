@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.hwhaocool.pointbunny.data.RecordEntity
+import com.github.hwhaocool.pointbunny.logic.Points
 import com.github.hwhaocool.pointbunny.logic.StatsLogic
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkPale
 import com.github.hwhaocool.pointbunny.ui.theme.DangerRed
@@ -96,13 +97,13 @@ fun HistoryScreen(
                 modifier = Modifier.padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SummaryCell("本月攒下", "+$mEarn", MintGreen, Modifier.weight(1f))
+                SummaryCell("本月攒下", "+${Points.format(mEarn)}", MintGreen, Modifier.weight(1f))
                 Box(
                     Modifier
                         .size(1.dp, 34.dp)
                         .background(TextBrownLight.copy(alpha = 0.25f))
                 )
-                SummaryCell("本月花掉", "-$mSpend", WarmOrange, Modifier.weight(1f))
+                SummaryCell("本月花掉", "-${Points.format(mSpend)}", WarmOrange, Modifier.weight(1f))
             }
         }
 
@@ -152,7 +153,7 @@ fun HistoryScreen(
             containerColor = White,
             title = { Text("删掉这条记录吗？", fontWeight = FontWeight.Bold) },
             text = {
-                Text("「${target.emoji} ${target.reason} ${if (target.isEarn) "+" else "-"}${target.points}分」删掉后积分也会跟着变回去哦～")
+                Text("「${target.emoji} ${target.reason} ${if (target.isEarn) "+" else "-"}${Points.format(target.pointsTenths)}分」删掉后积分也会跟着变回去哦～")
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -220,7 +221,8 @@ private fun RecordRow(
                 )
             }
             Text(
-                if (r.isEarn) "+${r.points} 分" else "-${r.points} 分",
+                if (r.isEarn) "+${Points.format(r.pointsTenths)} 分"
+                else "-${Points.format(r.pointsTenths)} 分",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = if (r.isEarn) MintGreen else WarmOrange

@@ -10,6 +10,7 @@ import com.github.hwhaocool.pointbunny.data.RecordEntity
 import com.github.hwhaocool.pointbunny.data.WishEntity
 import com.github.hwhaocool.pointbunny.logic.BadgeDefs
 import com.github.hwhaocool.pointbunny.logic.BadgeLogic
+import com.github.hwhaocool.pointbunny.logic.Points
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -67,6 +68,7 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
     val wishes: StateFlow<List<WishEntity>> = wishDao.flowAll()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    /** 当前余额，单位 0.1 分（如 135 = 13.5 分） */
     val balance: StateFlow<Int> = recordDao.flowBalance()
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
@@ -109,13 +111,13 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---------- 记录操作 ----------
 
-    /** 保存一笔攒分/花分记录，同时检查勋章解锁 */
+    /** 保存一笔攒分/花分记录（points 单位 0.1 分），同时检查勋章解锁 */
     fun addRecord(type: String, points: Int, reason: String, emoji: String) {
         viewModelScope.launch {
             recordDao.insert(
                 RecordEntity(
                     time = System.currentTimeMillis(),
-                    points = points,
+                    pointsTenths = points,
                     reason = reason,
                     emoji = emoji,
                     type = type
@@ -130,9 +132,10 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
                 val names = newOnes.joinToString("、") { BadgeDefs.byKey(it).title }
                 _toast.value = "🎉 获得新勋章：$names"
             } else {
+                val pointsText = Points.format(points)
                 _toast.value =
-                    if (type == "earn") "✅ 攒到 $points 分，你真棒！"
-                    else "花掉了 $points 分，继续加油～"
+                    if (type == "earn") "✅ 攒到 $pointsText 分，你真棒！"
+                    else "花掉了 $pointsText 分，继续加油～"
             }
         }
     }
@@ -145,11 +148,11 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** 编辑一条历史记录（积分/原因/emoji 可改，余额自动重算） */
+    /** 编辑一条历史记录（积分/原因/emoji 可改，points 单位 0.1 分；余额自动重算） */
     fun updateRecord(record: RecordEntity, points: Int, reason: String, emoji: String) {
         viewModelScope.launch {
             recordDao.update(
-                record.copy(points = points, reason = reason, emoji = emoji)
+                record.copy(pointsTenths = points, reason = reason, emoji = emoji)
             )
             _toast.value = "✅ 已更新这条记录"
         }
@@ -157,9 +160,10 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---------- 心愿操作 ----------
 
+    /** 新增心愿（target 单位 0.1 分） */
     fun addWish(emoji: String, name: String, target: Int) {
         viewModelScope.launch {
-            wishDao.insert(WishEntity(emoji = emoji, name = name, target = target))
+            wishDao.insert(WishEntity(emoji = emoji, name = name, targetTenths = target))
             _toast.value = "🌟 新心愿「$name」已添加！"
         }
     }
@@ -167,7 +171,7 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
     /** 尝试兑换心愿：生成一笔花分记录 + 标记心愿完成 + 解锁 b6 */
     fun redeemWish(w: WishEntity) {
         viewModelScope.launch {
-            if (balance.value < w.target) {
+            if (balance.value < w.targetTenths) {
                 _toast.value = "积分不够啦，先和爸爸妈妈一起攒一攒吧😢"
                 return@launch
             }
@@ -175,7 +179,7 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
             recordDao.insert(
                 RecordEntity(
                     time = now,
-                    points = w.target,
+                    pointsTenths = w.targetTenths,
                     reason = "兑换心愿·${w.name}",
                     emoji = w.emoji,
                     type = "spend"
@@ -209,14 +213,14 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
         o.put("app", "积分小兔")
         o.put("version", 1)
         o.put("exportedAt", Instant.now().atZone(ZoneId.systemDefault()).format(isoFmt))
-        o.put("balance", balance.value)
+        o.put("balance", Points.toDecimal(balance.value))
 
         val arr = JSONArray()
         records.value.sortedByDescending { it.time }.forEach { r ->
             arr.put(
                 JSONObject()
                     .put("type", r.type)
-                    .put("points", r.points)
+                    .put("points", Points.toDecimal(r.pointsTenths))
                     .put("reason", r.reason)
                     .put("emoji", r.emoji)
                     .put("time", Instant.ofEpochMilli(r.time).atZone(ZoneId.systemDefault()).format(isoFmt))
@@ -230,7 +234,7 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
                 JSONObject()
                     .put("emoji", w.emoji)
                     .put("name", w.name)
-                    .put("target", w.target)
+                    .put("target", Points.toDecimal(w.targetTenths))
                     .put("redeemed", w.done)
             )
         }
@@ -270,7 +274,8 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
                     }.getOrDefault(System.currentTimeMillis())
                     importedRecords += RecordEntity(
                         time = time,
-                        points = r.optInt("points", 0).coerceAtLeast(0),
+                        pointsTenths = Points.fromDecimal(r.optDouble("points", 0.0))
+                            .coerceAtLeast(0),
                         reason = r.optString("reason", ""),
                         emoji = r.optString("emoji", "⭐"),
                         type = type
@@ -284,7 +289,8 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
                     importedWishes += WishEntity(
                         emoji = w.optString("emoji", "🎁"),
                         name = w.optString("name", ""),
-                        target = w.optInt("target", 0).coerceAtLeast(0),
+                        targetTenths = Points.fromDecimal(w.optDouble("target", 0.0))
+                            .coerceAtLeast(0),
                         done = done,
                         doneAt = if (done) System.currentTimeMillis() else null
                     )
@@ -306,10 +312,10 @@ class BunnyViewModel(app: Application) : AndroidViewModel(app) {
                     }
                 }
                 if (allRecords.any { it.isEarn }) unlock("b1")
-                if (BadgeLogic.balanceOf(allRecords) >= 100) unlock("b2")
+                if (BadgeLogic.balanceOf(allRecords) >= Points.ofWhole(100)) unlock("b2")
                 if (allRecords.any { !it.isEarn }) unlock("b3")
                 if (BadgeLogic.earnStreak(allRecords) >= 7) unlock("b4")
-                if (BadgeLogic.totalEarn(allRecords) >= 2000) unlock("b5")
+                if (BadgeLogic.totalEarn(allRecords) >= Points.ofWhole(2000)) unlock("b5")
                 if (allWishes.any { it.done }) unlock("b6")
                 if (toUnlock.isNotEmpty()) badgeDao.insertAll(toUnlock)
 

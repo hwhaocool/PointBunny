@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.hwhaocool.pointbunny.data.ReasonEntity
 import com.github.hwhaocool.pointbunny.data.RecordEntity
+import com.github.hwhaocool.pointbunny.logic.Points
 import com.github.hwhaocool.pointbunny.ui.comp.NumberKeyboard
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkPale
@@ -60,6 +61,8 @@ private val QUICK_POINTS = listOf(1, 2, 5, 10, 20)
  * 大数字键盘 + 快捷加分 + 事项选择 + 保存。
  * 花分超过余额时：抖动警告 + 提示，不关闭弹窗。
  * @param reasons 事项列表（来自 ViewModel，可在家长专区自由管理）
+ * @param balance 当前余额，单位 0.1 分
+ * @param onSave 回调的 points 单位同样是 0.1 分
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,9 +79,12 @@ fun AddRecordSheet(
     val themeColor = if (isEarn) MintGreen else WarmOrange
     val isEdit = editTarget != null
     // 编辑花分记录时，先还原本条已扣的积分，避免误判余额不足
-    val spendLimit = if (!isEarn) balance + (editTarget?.points ?: 0) else balance
+    val spendLimit = if (!isEarn) balance + (editTarget?.pointsTenths ?: 0) else balance
 
-    var input by remember(editTarget) { mutableStateOf(editTarget?.points?.toString() ?: "") }
+    // 输入框内容（支持一位小数，如 "12.5"）
+    var input by remember(editTarget) {
+        mutableStateOf(editTarget?.let { Points.format(it.pointsTenths) } ?: "")
+    }
     // 小键盘默认折叠：点数字区或下方开关可展开，省出空间给事项和保存按钮
     var keypadExpanded by remember(editTarget) { mutableStateOf(false) }
     var reasonIndex by remember(editTarget) {
@@ -136,7 +142,7 @@ fun AddRecordSheet(
             )
             if (!isEarn) {
                 Text(
-                    "现在有 $balance 分",
+                    "现在有 ${Points.format(balance)} 分",
                     fontSize = 13.sp,
                     color = TextBrownLight,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -300,13 +306,8 @@ fun AddRecordSheet(
                 Column {
                     Spacer(Modifier.height(10.dp))
                     NumberKeyboard(
-                        onDigit = { d ->
-                            if (input.length < 5) {
-                                val s = input + d.toString()
-                                // 去掉前导零
-                                input = s.toIntOrNull()?.toString() ?: input
-                            }
-                        },
+                        onDigit = { d -> input = Points.appendDigit(input, d) },
+                        onDot = { input = Points.appendDot(input) },
                         onClear = { input = "" },
                         onBackspace = { input = if (input.isNotEmpty()) input.dropLast(1) else "" }
                     )
@@ -318,7 +319,8 @@ fun AddRecordSheet(
             // ---- 保存按钮 ----
             Surface(
                 onClick = {
-                    val points = input.toIntOrNull() ?: 0
+                    // 输入转成以 0.1 分为单位的整数
+                    val points = Points.parse(input) ?: 0
                     if (points <= 0) {
                         onWarn("先选一个数字哦～")
                         return@Surface

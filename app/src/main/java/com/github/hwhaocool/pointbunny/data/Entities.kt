@@ -1,5 +1,6 @@
 package com.github.hwhaocool.pointbunny.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -11,7 +12,8 @@ import androidx.room.PrimaryKey
 data class RecordEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val time: Long,        // 时间戳（毫秒）
-    val points: Int,       // 积分数量（永远为正数，方向由 type 决定）
+    // 积分数量，单位 0.1 分（如 15 表示 1.5 分；永远为正数，方向由 type 决定）
+    @ColumnInfo(name = "points") val pointsTenths: Int,
     val reason: String,    // 原因 / 事项文字
     val emoji: String,     // 对应的 emoji 图标
     val type: String       // "earn" = 攒分, "spend" = 花分
@@ -27,7 +29,8 @@ data class WishEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val emoji: String,
     val name: String,
-    val target: Int,            // 目标积分
+    // 目标积分，单位 0.1 分（如 600 表示 60.0 分）
+    @ColumnInfo(name = "target") val targetTenths: Int,
     val done: Boolean = false,  // 是否已兑换
     val doneAt: Long? = null    // 兑换时间
 )

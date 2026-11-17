@@ -37,7 +37,7 @@ interface RecordDao {
     @Query("DELETE FROM records")
     suspend fun deleteAll()
 
-    /** 余额 = 所有攒分之和 − 所有花分之和 */
+    /** 余额 = 所有攒分之和 − 所有花分之和（单位 0.1 分） */
     @Query(
         "SELECT COALESCE(SUM(CASE WHEN type='earn' THEN points ELSE -points END), 0) FROM records"
     )
@@ -115,7 +115,7 @@ interface ReasonDao {
 
 @Database(
     entities = [RecordEntity::class, WishEntity::class, BadgeEntity::class, ReasonEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -144,6 +144,17 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v2 -> v3：积分精度由整数分改为 0.1 分。
+         * 表结构不变（points / target 仍是 INTEGER），只把历史数据统一 ×10。
+         */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("UPDATE `records` SET `points` = `points` * 10")
+                db.execSQL("UPDATE `wishes` SET `target` = `target` * 10")
+            }
+        }
+
         fun get(context: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
@@ -151,7 +162,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "point_bunny.db"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }

@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.hwhaocool.pointbunny.logic.Points
 import com.github.hwhaocool.pointbunny.logic.StatBucket
 import com.github.hwhaocool.pointbunny.ui.theme.MintGreen
 import com.github.hwhaocool.pointbunny.ui.theme.TextBrown
@@ -90,7 +91,7 @@ fun BunnyBarChart(
                     size = Size(barW, bh),
                     cornerRadius = corner
                 )
-                val tm = textMeasurer.measure(b.earn.toString(), valueStyle)
+                val tm = textMeasurer.measure(Points.format(b.earn), valueStyle)
                 drawText(
                     tm,
                     topLeft = Offset(
@@ -109,7 +110,7 @@ fun BunnyBarChart(
                     size = Size(barW, bh),
                     cornerRadius = corner
                 )
-                val tm = textMeasurer.measure(b.spend.toString(), valueStyle)
+                val tm = textMeasurer.measure(Points.format(b.spend), valueStyle)
                 drawText(
                     tm,
                     topLeft = Offset(

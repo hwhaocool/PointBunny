@@ -10,8 +10,8 @@ plugins {
 }
 
 // 版本号默认值；CI 可通过 -PversionName=... / -PversionCode=... 覆盖
-val appVersionName = (project.findProperty("versionName") as String?) ?: "1.1"
-val appVersionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 2
+val appVersionName = (project.findProperty("versionName") as String?) ?: "1.2"
+val appVersionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 3
 
 android {
     namespace = "com.github.hwhaocool.pointbunny"

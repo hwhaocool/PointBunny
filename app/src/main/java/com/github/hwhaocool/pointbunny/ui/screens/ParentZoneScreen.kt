@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.hwhaocool.pointbunny.logic.Points
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkPale
 import com.github.hwhaocool.pointbunny.ui.theme.DangerRed
@@ -88,7 +89,7 @@ fun ParentZoneScreen(
                     modifier = Modifier.padding(vertical = 18.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OverviewCell("当前余额", "$balance 分", CandyPink, Modifier.weight(1f))
+                    OverviewCell("当前余额", "${Points.format(balance)} 分", CandyPink, Modifier.weight(1f))
                     OverviewCell("积分记录", "$recordCount 条", MintGreen, Modifier.weight(1f))
                     OverviewCell("心愿数量", "$wishCount 个", CandyPink, Modifier.weight(1f))
                 }

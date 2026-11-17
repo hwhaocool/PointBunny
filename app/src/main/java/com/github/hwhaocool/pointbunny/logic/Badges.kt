@@ -35,13 +35,13 @@ object BadgeLogic {
     fun toLocalDate(timeMs: Long): LocalDate =
         Instant.ofEpochMilli(timeMs).atZone(zone).toLocalDate()
 
-    /** 计算当前余额 */
+    /** 计算当前余额（单位 0.1 分） */
     fun balanceOf(records: List<RecordEntity>): Int =
-        records.sumOf { if (it.isEarn) it.points else -it.points }
+        records.sumOf { if (it.isEarn) it.pointsTenths else -it.pointsTenths }
 
-    /** 累计攒分总数 */
+    /** 累计攒分总数（单位 0.1 分） */
     fun totalEarn(records: List<RecordEntity>): Int =
-        records.filter { it.isEarn }.sumOf { it.points }
+        records.filter { it.isEarn }.sumOf { it.pointsTenths }
 
     /**
      * 连续攒分天数：从今天（或昨天）往前数，每天至少有一笔攒分记录。
@@ -75,10 +75,10 @@ object BadgeLogic {
         val totalEarn = totalEarn(records)
 
         if (type == "earn" && "b1" !in unlocked) newOnes += "b1"
-        if (balance >= 100 && "b2" !in unlocked) newOnes += "b2"
+        if (balance >= Points.ofWhole(100) && "b2" !in unlocked) newOnes += "b2"
         if (type == "spend" && "b3" !in unlocked) newOnes += "b3"
         if (earnStreak(records) >= 7 && "b4" !in unlocked) newOnes += "b4"
-        if (totalEarn >= 2000 && "b5" !in unlocked) newOnes += "b5"
+        if (totalEarn >= Points.ofWhole(2000) && "b5" !in unlocked) newOnes += "b5"
         return newOnes
     }
 }

@@ -37,6 +37,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.hwhaocool.pointbunny.data.WishEntity
+import com.github.hwhaocool.pointbunny.logic.Points
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPink
 import com.github.hwhaocool.pointbunny.ui.theme.CandyPinkPale
 import com.github.hwhaocool.pointbunny.ui.theme.MintGreen
@@ -52,6 +53,7 @@ private val WISH_EMOJIS = listOf("🦕", "🎁", "🍦", "🧸", "🎡", "🚲",
 
 /**
  * 心愿清单：进度条 + 还差x分 / 可以兑换啦 + 兑换 + 添加心愿
+ * 积分相关参数（balance / target）单位均为 0.1 分。
  */
 @Composable
 fun WishScreen(
@@ -83,7 +85,7 @@ fun WishScreen(
                 modifier = Modifier.weight(1f)
             )
             Text(
-                "现在有 $balance 分",
+                "现在有 ${Points.format(balance)} 分",
                 fontSize = 13.sp,
                 color = TextBrownLight
             )
@@ -144,7 +146,7 @@ fun WishScreen(
             onDismissRequest = { pendingRedeem = null },
             containerColor = White,
             title = { Text("兑换心愿？", fontWeight = FontWeight.Bold) },
-            text = { Text("要用 ${w.target} 分兑换「${w.emoji} ${w.name}」吗？兑换后积分会扣掉哦～") },
+            text = { Text("要用 ${Points.format(w.targetTenths)} 分兑换「${w.emoji} ${w.name}」吗？兑换后积分会扣掉哦～") },
             confirmButton = {
                 TextButton(onClick = {
                     onRedeem(w)
@@ -176,10 +178,10 @@ private fun WishCard(
     onRedeemClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    val progress = if (wish.target <= 0) 1f
-    else (balance.toFloat() / wish.target).coerceIn(0f, 1f)
+    val progress = if (wish.targetTenths <= 0) 1f
+    else (balance.toFloat() / wish.targetTenths).coerceIn(0f, 1f)
     val animProgress by animateFloatAsState(progress, tween(600), label = "wishProgress")
-    val canRedeem = balance >= wish.target && !wish.done
+    val canRedeem = balance >= wish.targetTenths && !wish.done
 
     Surface(
         shape = RoundedCornerShape(24.dp),
@@ -201,7 +203,7 @@ private fun WishCard(
                     Text(
                         text = if (wish.done) "已达成 ✅"
                         else if (canRedeem) "可以兑换啦🎉"
-                        else "还差 ${wish.target - balance} 分",
+                        else "还差 ${Points.format(wish.targetTenths - balance)} 分",
                         fontSize = 13.sp,
                         color = when {
                             wish.done -> MintGreen
@@ -239,7 +241,8 @@ private fun WishCard(
             }
             Spacer(Modifier.height(4.dp))
             Text(
-                "${balance.coerceAtMost(wish.target)} / ${wish.target} 分",
+                "${Points.format(balance.coerceAtMost(wish.targetTenths))} / " +
+                    "${Points.format(wish.targetTenths)} 分",
                 fontSize = 11.sp,
                 color = TextBrownLight
             )
@@ -317,19 +320,17 @@ private fun AddWishDialog(
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = targetText,
-                    onValueChange = { v ->
-                        targetText = v.filter { c -> c.isDigit() }.take(5)
-                    },
-                    label = { Text("需要多少分") },
+                    onValueChange = { v -> targetText = Points.sanitizeInput(v) },
+                    label = { Text("需要多少分（可填一位小数）") },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                val target = targetText.toIntOrNull() ?: 0
+                val target = Points.parse(targetText) ?: 0
                 if (name.isNotBlank() && target > 0) {
                     onConfirm(emoji, name.trim(), target)
                 }
