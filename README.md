@@ -148,6 +148,6 @@ git push origin v1.0.0
 | 积分精度／格式化／小键盘输入规则 | `logic/Points.kt`（`SCALE = 10` 即 0.1 分） |
 | 勋章规则 | `logic/Badges.kt` |
 | 统计分桶／自定义区间规则 | `logic/StatsBuckets.kt` |
-| 版本号／构建时间 | `app/build.gradle.kts` 中 `versionCode`、`versionName`、`BUILD_TIME`（可用 `-PbuildTime=...` 覆盖） |
+| 版本号／构建时间 | `app/build.gradle.kts` 中 `versionCode`、`versionName`、`BUILD_TIME`（构建时间固定按东八区显示，可用 `-PbuildTime=...` 覆盖） |
 | APK 产物命名 | `app/build.gradle.kts` 中 `outputFileName` |
 | 最低支持的安卓版本 | `app/build.gradle.kts` 中 `minSdk`（当前 26 = Android 8.0） |

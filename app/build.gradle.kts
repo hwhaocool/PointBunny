@@ -1,6 +1,7 @@
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 plugins {
     id("com.android.application")
@@ -24,9 +25,12 @@ android {
         versionCode = appVersionCode
         versionName = appVersionName
 
-        // 「关于」页展示的构建时间（可用 -PbuildTime=... 覆盖，便于复现构建）
+        // 「关于」页展示的构建时间，固定使用东八区（Asia/Shanghai），避免构建机是 UTC 时显示成 UTC 时间
+        // 可用 -PbuildTime=... 覆盖，便于复现构建
         val buildTime = (project.findProperty("buildTime") as String?)
-            ?: SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date())
+            ?: SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).apply {
+                timeZone = TimeZone.getTimeZone("Asia/Shanghai")
+            }.format(Date())
         buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
     }
 
